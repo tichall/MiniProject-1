@@ -1,0 +1,294 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>죠기어때</title>
+
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Bagel+Fat+One&display=swap" rel="stylesheet">
+
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.0.2/dist/css/bootstrap.min.css" rel="stylesheet"
+    integrity="sha384-EVSTQN3/azprG1Anm3QDgpJLIm9Nao0Yz1ztcQTwFspd3yD65VohhpuuCOmLASjC" crossorigin="anonymous" />
+
+    <link rel="stylesheet" href="header.css">
+    <style>
+
+      .search-filter {
+        margin-right: 10px;
+        padding: 5px;
+        border: 1px solid #ccc;
+        border-radius: 5px;
+        cursor: pointer;
+      }
+
+      .contentBtn {
+        margin-left: 10px;
+      }
+
+      .review-container{
+        display: flex;
+        flex-direction: row;
+        margin: 50px 50px 20px 50px;
+      }
+
+      .image{
+        width: 50%;
+        padding: 30px;
+        margin-right: 50px;
+      }
+
+      #imageSec {
+        width: 100%;
+        height: 450px;
+        border: 1px solid lightgray;
+        border-radius: 5px;
+        margin-bottom: 15px;
+      }
+
+      .content{
+        width: 50%;
+        padding: 30px;
+      }
+
+      #inputHotelName, #comment {
+        width: 100%;
+      }
+
+      .upload {
+        margin-top: 20px;
+        float: right;
+      }
+
+      #uploadBtn {
+        width: 130px;
+      }
+
+      .content div {
+        margin-top: 15px;
+      }
+
+      td{
+        font-weight: bold;
+      }
+
+    </style>
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
+    <script type="module">
+      // Firebase SDK 라이브러리 가져오기
+      import { initializeApp } from "https://www.gstatic.com/firebasejs/9.22.0/firebase-app.js";
+
+      import { getDatabase, ref, get, child } from "https://www.gstatic.com/firebasejs/9.22.0/firebase-database.js";
+
+      import { getStorage, uploadBytesResumable, getDownloadURL} from "https://www.gstatic.com/firebasejs/9.22.0/firebase-storage.js";
+
+
+      // Your web app's Firebase configuration
+      const firebaseConfig = {
+            apiKey: "AIzaSyApcUVgvBWTEqlKCINOFnRkttZbJ2EjMXY",
+            authDomain: "spartaminiproject.firebaseapp.com",
+            databaseURL: "https://spartaminiproject-default-rtdb.firebaseio.com",
+            projectId: "spartaminiproject",
+            storageBucket: "spartaminiproject.appspot.com",
+            messagingSenderId: "973891752316",
+            appId: "1:973891752316:web:e03f9c7bc4bc11ab9954f9",
+            measurementId: "G-0WF3E033D3"
+        };
+
+      // Initialize Firebase
+      const app = initializeApp(firebaseConfig);
+      const db = getDatabase(app);
+      
+      // url에서 리뷰 파라미터 가져오기
+      const url = document.location.href;
+      console.log(url);
+      let query = window.location.search;
+      let param = new URLSearchParams(query);
+      let reviewKey = param.get('review');
+      console.log(reviewKey);
+      
+      const reviewRef = ref(db, 'user_review/' + reviewKey)
+      get(reviewRef).then((snapshot) => {
+        if (snapshot.exists()) {
+          const object = snapshot.val();
+          loadReview(object);
+        } else {
+            alert("No data available");
+        }
+      }).catch((error) => {
+          console.error(error)
+      })
+    
+      function loadReview(object){
+        loadFile(object.reviewImg);
+        const viewRegion = object.reviewRegion;
+        const viewId = object.reviewId;
+        const viewHotelName = object.reviewHotelName;
+        const viewRate = generateStars(object.reviewRate);
+        const viewContent = object.reviewContent;
+        const viewDate = object.reviewDate;
+        
+        //console.log(viewId);
+        $('#reviewRegion').text(viewRegion);
+        $('#reviewId').text(viewId);
+        $('#reviewHotelName').text(viewHotelName);
+        $('#reviewRate').html(viewRate);
+        $('#reviewContent').text(viewContent);
+        $('#reviewDate').text(viewDate);
+      }
+
+      // 별표 생성 함수
+      function generateStars(rate) {
+        const fullStars = Math.floor(rate);
+        const hasHalfStar = rate % 1 !== 0;
+
+        let starsHTML = '';
+        for (let i = 0; i < fullStars; i++) {
+            starsHTML += '<span style="color: orange;">★</span>';
+        }
+        if (hasHalfStar) {
+            starsHTML += '<span style="color: orange;">☆</span>';
+        }
+        const emptyStars = 5 - Math.ceil(rate);
+        for (let i = 0; i < emptyStars; i++) {
+            starsHTML += '<span>☆</span>';
+        }
+
+        return starsHTML;
+      }
+
+      // 로고 클릭 이벤트
+      document.querySelector('#homepage').addEventListener('click', () => {
+        if (sessionStorage.getItem('id') === null) {
+          window.location.href = 'nonUser_mainpage.html';
+        } else {
+          window.location.href = 'user_mainpage.html';
+        } 
+      });
+
+      // 마이페이지 버튼 클릭 이벤트
+      document.querySelector('#my-page').addEventListener('click', () => {
+        window.location.href = 'user_mypage.html';
+      });
+
+      // 리뷰 추가하기 버튼 클릭 이벤트
+      document.querySelector('#content').addEventListener('click', () => {
+        if (sessionStorage.getItem('id') === null) {
+          alert("로그인이 필요한 서비스입니다!");
+        } else {
+          window.location.href = 'upload.html';
+        } 
+        
+      });
+
+      // 로그아웃 버튼 클릭 이벤트
+      $('#sign-out').click(function() {
+            sessionStorage.clear();
+            location.href = 'nonUser_mainpage.html';
+      });
+
+      // 로그인 클릭 이벤트
+      $('#sign-in').click(function() {
+        location.href = 'login.html';
+      })
+
+      // 회원가입 클릭 이벤트
+      $('#sign-up').click(function() {
+        location.href = 'signUp.html';
+      })
+
+
+    </script>
+    <script>
+      
+      function loadFile(url) {
+        let container = document.getElementById('imageSec');
+    
+        let newImage = document.createElement("img"); //새 이미지 태그 생성
+
+        //이미지 source 가져오기
+        newImage.src = url;
+        newImage.style.width = "100%"; 
+        newImage.style.height = "100%";
+        newImage.style.objectFit = "cover"; // div에 넘치지 않고 들어가게
+
+        //이미지를 image-show div에 추가
+        container.appendChild(newImage);
+      }
+    </script>
+</head>
+<body>
+  <nav class="navbar navbar-expand-lg bg-body-tertiary">
+    <div class="container-fluid">
+        <a class="navbar-brand" href="#" id="homepage">죠기어때</a>
+        <button class="navbar-toggler" type="button" data-bs-toggle="collapse"
+            data-bs-target="#navbarSupportedContent" aria-controls="navbarSupportedContent" aria-expanded="false"
+            aria-label="Toggle navigation">
+            <span class="navbar-toggler-icon"></span>
+        </button>
+        <!-- <form class="d-flex" role="search">
+            <select class="search-filter">
+                <option value="id">아이디</option>
+                <option value="accommodation">숙소명</option>
+                <option value="location">지역</option>
+                <option value="rating">평점</option>
+                <option value="review">리뷰내용</option>
+            </select>
+            <input class="form-control me-2 search-input" type="search" id="search" placeholder="검색어를 입력해주세요!"
+                aria-label="Search">
+            <button class="btn btn-outline-success searchBtn" type="button" id="search">검색하기</button> -->
+            <button class="btn btn-outline-success contentBtn" type="button" id="content">리뷰를 추가해주세요!</button>
+        </form>
+        <div class="sign">
+
+            <button type="button" id="my-page" class="btn btn-light">마이페이지</button>
+            <button type="button" id="sign-out" class="btn">로그아웃</button>
+        </div>
+    </div>
+</nav>
+
+      <div class="review-container">
+        <div class="image">
+          <!-- 이미지 미리보기 -->
+          <div id="imageSec">
+
+          </div>
+          
+        </div>
+        <div class="content">
+          <table class="table">
+            <tbody>
+              <tr>
+                <th scope="row" style="width:15%">숙소:</th>
+                <td id="reviewHotelName" style="width:85%"></td>
+              </tr>
+              <tr>
+                <th scope="row" style="width:15%">작성자:</th>
+                <td id="reviewId" style="width:85%"></td>
+              </tr>
+              <tr>
+                <th scope="row" style="width:15%">작성날짜:</th>
+                <td id="reviewDate" style="width:85%"></td>
+              </tr>
+              <tr>
+                <th scope="row" style="width:15%">지역:</th>
+                <td id="reviewRegion" style="width:85%"></td>
+              </tr>
+              <tr>
+                <th scope="row" style="width:15%">평점:</th>
+                <td id="reviewRate" style="width:85%"></td>
+              </tr>
+              <tr>
+                <th scope="row" style="width:15%">내용:</th>
+                <td id="reviewContent" style="width:85%"></td>
+              </tr>
+            </tbody>
+          </table>
+          
+          
+        </div>
+      </div>
+</body>
+</html>
+
