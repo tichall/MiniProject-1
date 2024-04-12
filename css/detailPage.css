@@ -1,0 +1,45 @@
+.review-container{
+    display: flex;
+    flex-direction: row;
+    margin: 50px 50px 20px 50px;
+  }
+
+  .image{
+    width: 50%;
+    padding: 30px;
+    margin-right: 50px;
+  }
+
+  #imageSec {
+    width: 100%;
+    height: 450px;
+    border: 1px solid lightgray;
+    border-radius: 5px;
+    margin-bottom: 15px;
+  }
+
+  .content{
+    width: 50%;
+    padding: 30px;
+  }
+
+  #inputHotelName, #comment {
+    width: 100%;
+  }
+
+  .upload {
+    margin-top: 20px;
+    float: right;
+  }
+
+  #uploadBtn {
+    width: 130px;
+  }
+
+  .content div {
+    margin-top: 15px;
+  }
+
+  td{
+    font-weight: bold;
+  }
