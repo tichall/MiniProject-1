@@ -13,310 +13,9 @@
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.0.2/dist/css/bootstrap.min.css" rel="stylesheet"
         integrity="sha384-EVSTQN3/azprG1Anm3QDgpJLIm9Nao0Yz1ztcQTwFspd3yD65VohhpuuCOmLASjC" crossorigin="anonymous" />
 
-    <link rel="stylesheet" href="header.css">
-
-    <style>
-        /* 그리드 컨테이너 스타일 */
-        .grid-container {
-            display: grid;
-            grid-template-columns: repeat(auto-fill, minmax(400px, 1fr));
-            /* 3개의 열로 설정 */
-            gap: 30px;
-            /* 그리드 아이템 간격 설정 */
-            justify-content: center;
-            /* 수평 가운데 정렬 */
-            overflow: auto;
-            /* 스크롤바 추가 */
-            max-height: 80vh;
-            /* 최대 높이 설정 */
-            margin: 30px 50px 30px 50px;
-        }
-
-        /* 각 그리드 아이템 스타일 */
-        .grid-item {
-            height: 280px;
-            border: 1px solid #ccc;
-            border-radius: 10px;
-            padding-left: 20px;
-            padding-right: 10px;
-            display: flex;
-            /* 아이템 내부 요소들을 수평 정렬하기 위해 추가 */
-            align-items: center;
-            /* 아이템 내부 요소들을 수직 가운데 정렬하기 위해 추가 */
-        }
-
-        .grid-item img {
-            width: 50%;
-            /* 사진을 왼쪽 절반으로 설정 */
-            height: 70%;
-            border-radius: 5px;
-            margin-right: 20px;
-            /* 사진과 정보 사이 간격 조정 */
-        }
-        
-        .grid-item-content {
-            width: 45%;
-            display: flex;
-            flex-direction: column;
-            justify-content: flex-start;
-        }
-
-        .text-container {
-            overflow: hidden;
-            text-overflow: ellipsis;
-             /* 텍스트가 줄바꿈되지 않도록 설정 */
-             white-space: nowrap;
-        }
-
-        .text-container p {
-            overflow: hidden;
-            text-overflow: ellipsis;
-             /* 텍스트가 줄바꿈되지 않도록 설정 */
-             white-space: nowrap;
-        }
-
-        .btn-container {
-            display: flex;
-            flex-direction: row;
-        }
-        .editBtn {
-            margin-right: 5px;
-        }
-
-        .search-filter {
-            margin-right: 10px;
-            padding: 5px;
-            border: 1px solid #ccc;
-            border-radius: 5px;
-            cursor: pointer;
-        }
-
-        .contentBtn {
-            margin-left: 10px;
-        }
-
-        .actionBtn {
-            text-align: center;
-            position: absolute;
-            /* 절대 위치 설정 */
-            bottom: 10px;
-            /* 하단 여백 */
-            left: 50%;
-            /* 가운데 정렬 */
-            transform: translateX(-50%);
-            /* 수평 정렬 */
-        }
-    </style>
-    <script type="module">
-        import { initializeApp } from "https://www.gstatic.com/firebasejs/9.22.0/firebase-app.js";
-        import { getDatabase, ref, get, remove } from "https://www.gstatic.com/firebasejs/9.22.0/firebase-database.js";
-
-        import {
-        getStorage,
-        ref as sRef,
-        deleteObject
-        } from "https://www.gstatic.com/firebasejs/9.22.0/firebase-storage.js";
-
-        // Your web app's Firebase configuration
-        const firebaseConfig = {
-            apiKey: "AIzaSyApcUVgvBWTEqlKCINOFnRkttZbJ2EjMXY",
-            authDomain: "spartaminiproject.firebaseapp.com",
-            databaseURL: "https://spartaminiproject-default-rtdb.firebaseio.com",
-            projectId: "spartaminiproject",
-            storageBucket: "spartaminiproject.appspot.com",
-            messagingSenderId: "973891752316",
-            appId: "1:973891752316:web:e03f9c7bc4bc11ab9954f9",
-            measurementId: "G-0WF3E033D3"
-        };
-
-        // Initialize Firebase
-        const app = initializeApp(firebaseConfig);
-        const db = getDatabase();
-        const storage = getStorage();
-
-
-        // 데이터 불러와서 화면에 표시하는 함수
-        function displayUserData() {
-            const gridContainer = document.querySelector('.grid-container');
-            const searchFilter = document.querySelector('.search-filter');
-            const searchText = document.querySelector('.search-input').value.toLowerCase();
-
-            const userKey = sessionStorage.getItem('id');
-            console.log(userKey);
-            // 'user_review' 데이터베이스 참조
-            const userRef = ref(db, 'user_review');
-
-            // 데이터 가져오기
-            get(userRef).then((snapshot) => {
-                if (snapshot.exists()) {
-                    gridContainer.innerHTML = ''; // 기존 내용 초기화
-                    const reviews = snapshot.val();
-
-                    // 각 리뷰에 대해 반복
-                    Object.keys(reviews).forEach((key) => {
-                        const review = reviews[key];
-                        if (review.reviewId == userKey) {
-                            // 검색 필터에 따른 검색 수행
-                            if (
-                                (searchFilter.value === 'accommodation' && review.reviewHotelName.toLowerCase().includes(searchText)) ||
-                                (searchFilter.value === 'location' && review.reviewRegion.toLowerCase().includes(searchText)) ||
-                                (searchFilter.value === 'rating' && review.reviewRate.toString().includes(searchText)) ||
-                                (searchFilter.value === 'review' && review.reviewContent.toLowerCase().includes(searchText)) ||
-                                (searchFilter.value === 'all' && (
-                                    review.reviewId.toLowerCase().includes(searchText) ||
-                                    review.reviewHotelName.toLowerCase().includes(searchText) ||
-                                    review.reviewRegion.toLowerCase().includes(searchText) ||
-                                    review.reviewRate.toString().includes(searchText) ||
-                                    review.reviewContent.toLowerCase().includes(searchText)
-                                ))
-                            ) {
-                                // 그리드에 추가할 요소 생성
-                                const gridItem = document.createElement('div');
-                                gridItem.classList.add('grid-item');
-                                gridItem.setAttribute('data-key', key); // 각 항목의 키 값 설정
-                                
-                                gridItem.innerHTML = `
-                                <img src="${review.reviewImg}" alt="리뷰 이미지">
-                                <div class="grid-item-content">
-                                    <div class = "text-container">
-                                    
-                                    <p><strong>숙소명:</strong> ${review.reviewHotelName}</p>
-                                    <p><strong>지역:</strong> ${review.reviewRegion}</p>
-                                    <p><strong>평점:</strong> ${generateStars(review.reviewRate)}</p>
-                                    <p><strong>리뷰내용:</strong> ${review.reviewContent}</p>
-                                    </div>
-                                    <div class = "btn-container">
-                                    <button class="btn btn-outline-primary editBtn">수정하기</button>
-                                    <button class="btn btn-outline-danger deleteBtn">삭제하기</button>
-                                    </div>
-                                </div>
-                                `;
-                                gridContainer.appendChild(gridItem);
-                            }
-                        }    
-                    });
-                } else {
-                    gridContainer.innerHTML = '<p>게시글이 없습니다.</p>';
-                    console.log("데이터가 없습니다.");
-                }
-            }).catch((error) => {
-                console.error(error);
-            });
-            if (gridContainer.innerHTML == '') {
-                gridContainer.innerHTML = '<p>게시글이 없습니다.</p>';
-                    console.log("데이터가 없습니다.");
-            }
-        }
-
-        // 별표 생성 함수
-        function generateStars(rate) {
-            const fullStars = Math.floor(rate);
-            const hasHalfStar = rate % 1 !== 0;
-
-            let starsHTML = '';
-            for (let i = 0; i < fullStars; i++) {
-                starsHTML += '<span style="color: orange;">★</span>';
-            }
-            if (hasHalfStar) {
-                starsHTML += '<span style="color: orange;">☆</span>';
-            }
-            const emptyStars = 5 - Math.ceil(rate);
-            for (let i = 0; i < emptyStars; i++) {
-                starsHTML += '<span>☆</span>';
-            }
-
-            return starsHTML;
-        }
-
-        // 페이지가 로드될 때 및 검색 버튼 클릭 시 데이터 가져오기
-        window.onload = displayUserData;
-
-        // 로고 클릭 이벤트
-        document.querySelector('#homepage').addEventListener('click', () => {
-            if (sessionStorage.getItem('id') === null) {
-            window.location.href = 'nonUser_mainpage.html';
-            } else {
-            window.location.href = 'user_mainpage.html';
-            } 
-        });
-
-        // 검색 버튼 클릭 이벤트
-        document.querySelector('.searchBtn').addEventListener('click', () => {
-            displayUserData();
-        });
-
-        // 마이페이지 버튼 클릭 이벤트
-        document.querySelector('#my-page').addEventListener('click', () => {
-            window.location.href = 'user_mypage.html';
-        });
-
-        // 리뷰 추가하기 버튼 클릭 이벤트
-            document.querySelector('#content').addEventListener('click', () => {
-            window.location.href = 'upload.html';
-        });
-
-        // 로그아웃 버튼 클릭 이벤트
-        $('#sign-out').click(function() {
-            sessionStorage.clear();
-            location.href = 'nonUser_mainpage.html';
-        });
-
-
-        // 스토리지 이미지 삭제 
-        function deleteImg(object) {
-            const deleteRef = sRef(storage, object.reviewImg);
-
-            // Delete the file
-            deleteObject(deleteRef).then(() => {
-                console.log("이미지 삭제 완료");
-            }).catch((error) => {
-                console.log("이미지 삭제 실패")
-            });
-        }
-
-        // 수정하기 버튼 클릭 이벤트
-        document.addEventListener('click', function (event) {
-            if (event.target.classList.contains('editBtn')) {
-                const gridItem = event.target.closest('.grid-item');
-                const key = gridItem.getAttribute('data-key');
-                location.href = "update.html?review="+ key;
-            }
-        });
-
-        // 삭제하기 버튼 클릭 이벤트
-        document.addEventListener('click', function (event) {
-            if (event.target.classList.contains('deleteBtn')) {
-                const gridItem = event.target.closest('.grid-item');
-                const key = gridItem.getAttribute('data-key');
-
-                console.log(key);
-                const reviewListRef = ref(db, "user_review/" + key);
-
-                get(reviewListRef).then((snapshot) => {
-                    if (snapshot.exists()) {
-                    const object = snapshot.val();
-                    deleteImg(object);
-                    } else {
-                        alert("No data available");
-                    }
-                }).catch((error) => {
-                    console.error(error)
-                })
-
-                // Firebase에서 데이터 삭제
-                remove(reviewListRef)
-                    .then(() => {
-                        // 삭제 성공 시 알림창 표시
-                        alert("삭제가 완료되었습니다!");
-                        console.log("Document successfully deleted!");
-                        displayUserData();
-                    })
-                    .catch((error) => {
-                        console.error("Error removing document: ", error);
-                    });
-            }
-        });
-    </script>
+    <link rel="stylesheet" href="css/header.css">
+    <link rel="stylesheet" href="css/grid_mypage.css">
+    
 </head>
 
 <body>
@@ -351,5 +50,61 @@
         
     </div>
 </body>
+<script type="module">
+    import { displayUserData, deleteImg, deleteReview } from "./firebaseUsage.js"
+
+    // 페이지가 로드될 때 및 검색 버튼 클릭 시 데이터 가져오기
+    window.onload = displayUserData;
+
+    // 로고 클릭 이벤트
+    document.querySelector('#homepage').addEventListener('click', () => {
+        if (sessionStorage.getItem('id') === null) {
+        window.location.href = './index.html';
+        } else {
+        window.location.href = './user_mainpage.html';
+        } 
+    });
+
+    // 검색 버튼 클릭 이벤트
+    document.querySelector('.searchBtn').addEventListener('click', () => {
+        displayUserData();
+    });
+
+    // 마이페이지 버튼 클릭 이벤트
+    document.querySelector('#my-page').addEventListener('click', () => {
+        window.location.href = 'user_mypage.html';
+    });
+
+    // 리뷰 추가하기 버튼 클릭 이벤트
+        document.querySelector('#content').addEventListener('click', () => {
+        window.location.href = 'upload.html';
+    });
+
+    // 로그아웃 버튼 클릭 이벤트
+    $('#sign-out').click(function() {
+        sessionStorage.clear();
+        location.href = 'nonUser_mainpage.html';
+    });
+
+    // 수정하기 버튼 클릭 이벤트
+    document.addEventListener('click', function (event) {
+        if (event.target.classList.contains('editBtn')) {
+            const gridItem = event.target.closest('.grid-item');
+            const key = gridItem.getAttribute('data-key');
+            location.href = "update.html?review="+ key;
+        }
+    });
+
+    // 삭제하기 버튼 클릭 이벤트
+    document.addEventListener('click', function (event) {
+        if (event.target.classList.contains('deleteBtn')) {
+            const gridItem = event.target.closest('.grid-item');
+            const key = gridItem.getAttribute('data-key');
+
+            console.log(key);
+            deleteReview(key);
+        }
+    });
+</script>
 
 </html>
