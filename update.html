@@ -1,0 +1,366 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>죠기어때</title>
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Bagel+Fat+One&display=swap"
+      rel="stylesheet"
+    />
+    <link
+      href="https://cdn.jsdelivr.net/npm/bootstrap@5.0.2/dist/css/bootstrap.min.css"
+      rel="stylesheet"
+      integrity="sha384-EVSTQN3/azprG1Anm3QDgpJLIm9Nao0Yz1ztcQTwFspd3yD65VohhpuuCOmLASjC"
+      crossorigin="anonymous"
+    />
+
+    <link rel="stylesheet" href="header.css" />
+    <style>
+      .review-container {
+        display: flex;
+        flex-direction: row;
+        margin: 50px 50px 20px 50px;
+      }
+
+      .image {
+        width: 50%;
+        padding: 30px;
+        margin-right: 50px;
+      }
+
+      #imageSec {
+        width: 100%;
+        height: 90%;
+        border: 1px solid lightgray;
+        border-radius: 5px;
+        margin-bottom: 15px;
+      }
+
+      .content {
+        width: 50%;
+        padding: 30px;
+      }
+
+      #inputHotelName,
+      #comment {
+        width: 100%;
+      }
+
+      .upload {
+        margin-top: 20px;
+        float: right;
+      }
+
+      #uploadBtn {
+        width: 130px;
+      }
+    </style>
+  </head>
+  <body>
+    <nav class="navbar navbar-expand-lg bg-body-tertiary">
+      <div class="container-fluid">
+        <a class="navbar-brand" href="#">죠기어때</a>
+        <button
+          class="navbar-toggler"
+          type="button"
+          data-bs-toggle="collapse"
+          data-bs-target="#navbarSupportedContent"
+          aria-controls="navbarSupportedContent"
+          aria-expanded="false"
+          aria-label="Toggle navigation"
+        >
+          <span class="navbar-toggler-icon"></span>
+        </button>
+        <form class="d-flex" role="search">
+          <input
+            class="form-control me-2"
+            type="search"
+            id="search"
+            placeholder="숙소명을 입력해주세요!"
+            aria-label="Search"
+          />
+          <button class="btn btn-outline-success" id="searchBtn" type="submit">
+            Search
+          </button>
+        </form>
+        <div class="sign">
+          <button type="button" id="sign-in" class="btn btn-light">
+            마이페이지
+          </button>
+          <button type="button" id="sign-up" class="btn">업로드</button>
+        </div>
+      </div>
+    </nav>
+
+    <div class="review-container">
+      <div class="image">
+        <!-- 이미지 미리보기 -->
+        <div id="imageSec"></div>
+        <!-- 이미지 삽입 -->
+        <div class="input-group">
+          <form class="inputImg" method="post" enctype="multipart/form-data">
+            <!-- 이미지 형식 상관없이 모두 받아오기 -->
+            <input
+              type="file"
+              id="inputFile"
+              accept="image/*"
+              onchange="loadNewFile(this)"
+            />
+          </form>
+          
+        </div>
+      </div>
+      <div class="content">
+        <form id="contentBox">
+          <div class="input-group mb-3">
+            <span class="input-group-text" id="basic-addon1">숙소명</span>
+            <input type="text" class="form-control" id="hotelName" />
+          </div>
+          <div class="input-group mb-3">
+            <label class="input-group-text" for="inputGroupSelect01"
+              >지역</label
+            >
+            <select class="form-select" id="region">
+              <option selected>지역 선택</option>
+              <option value="서울">서울</option>
+              <option value="경기도">경기도</option>
+              <option value="강원도">강원도</option>
+              <option value="충청북도">충청북도</option>
+              <option value="충청남도">충청남도</option>
+              <option value="대전">대전</option>
+              <option value="전라북도">전라남도</option>
+              <option value="전라남도">전라북도</option>
+              <option value="광주">광주</option>
+              <option value="경상북도">경상북도</option>
+              <option value="대구">대구</option>
+              <option value="경상남도">경상남도</option>
+              <option value="울산">울산</option>
+              <option value="부산">부산</option>
+            </select>
+          </div>
+          <div class="input-group mb-3">
+            <label class="input-group-text" for="inputGroupSelect01"
+              >평점</label
+            >
+            <select class="form-select" id="rate">
+              <option selected>평점 선택</option>
+              <option value="1">⭐</option>
+              <option value="2">⭐⭐</option>
+              <option value="3">⭐⭐⭐</option>
+              <option value="4">⭐⭐⭐⭐</option>
+              <option value="5">⭐⭐⭐⭐⭐</option>
+            </select>
+          </div>
+          <div class="form-floating">
+            <textarea
+              class="form-control"
+              placeholder="Leave a comment here"
+              id="comment"
+              style="height: 300px"
+            ></textarea>
+            <label for="comment">숙소평을 남겨주세요!</label>
+          </div>
+          <div class="upload">
+            <button
+              type="button"
+              id="updateBtn"
+              class="btn"
+              style="background-color: #6a24fe; color: white"
+            >
+              수정
+            </button>
+          </div>
+        </form>
+      </div>
+    </div>
+  </body>
+  
+  <script type="module">
+    // Firebase SDK 라이브러리 가져오기
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/9.22.0/firebase-app.js";
+
+    import {
+      getDatabase,
+      ref,
+      get,
+      set,
+      push
+    } from "https://www.gstatic.com/firebasejs/9.22.0/firebase-database.js";
+
+    import {
+      getStorage,
+      uploadBytesResumable,
+      getDownloadURL,
+      ref as sRef
+    } from "https://www.gstatic.com/firebasejs/9.22.0/firebase-storage.js";
+
+    //import { v4 as uuidv4 } from "uuid";
+
+    // Firebase 구성 정보 설정
+    const firebaseConfig = {
+      apiKey: "AIzaSyApcUVgvBWTEqlKCINOFnRkttZbJ2EjMXY",
+      authDomain: "spartaminiproject.firebaseapp.com",
+      databaseURL: "https://spartaminiproject-default-rtdb.firebaseio.com",
+      projectId: "spartaminiproject",
+      storageBucket: "spartaminiproject.appspot.com",
+      messagingSenderId: "973891752316",
+      appId: "1:973891752316:web:e03f9c7bc4bc11ab9954f9",
+      measurementId: "G-0WF3E033D3",
+    };
+
+    // Firebase 인스턴스 초기화
+    const app = initializeApp(firebaseConfig);
+    const db = getDatabase();
+    const storage = getStorage(app);
+
+    console.log(sessionStorage);
+
+    const url = document.location.href;
+    console.log(url);
+    let query = window.location.search;
+    let param = new URLSearchParams(query);
+    let reviewKey = param.get('review');
+    console.log(reviewKey);
+
+    const reviewListRef = ref(db, "user_review/" + reviewKey);
+    let reviewId = sessionStorage.getItem('id');
+   
+    viewPrev();
+
+    function viewPrev () {
+      get(reviewListRef).then((snapshot) => {
+        if (snapshot.exists()) {
+          const object = snapshot.val();
+          loadPrev(object);
+        } else {
+            alert("No data available");
+        }
+      }).catch((error) => {
+          console.error(error)
+      })
+    }
+
+    // 기존 데이터 불러오기
+    function loadPrev(object) {
+        loadPrevFile(object.reviewImg);
+        const viewHotelName = object.reviewHotelName;
+        const viewRegion = object.reviewRegion;
+        const viewRate = object.reviewRate;
+        const viewContent = object.reviewContent;
+        console.log(viewHotelName);
+        $('#hotelName').val(viewHotelName);        
+        $("#region").val(viewRegion).prop("selected", true);
+        $('#rate').val(viewRate).prop("selected", true);
+        $('#comment').text(viewContent);
+    }
+
+    // 업데이트된 리뷰 데이터 DB 값 수정
+    function updateReview(reviewImg) {
+      let date = new Date();
+
+      let reviewHotelName = $("#hotelName").val();
+      let reviewRegion = $("#region").val();
+      let reviewRate = $("#rate").val();
+      let reviewContent = $("#comment").val();
+      let reviewDate = date.getFullYear() + "년 " + date.getMonth() + "월 " + date.getDate() + "일 (수정)";
+      console.log(reviewDate);
+
+      set(reviewListRef, {
+        "reviewId": reviewId,
+        "reviewImg": reviewImg,
+        "reviewHotelName": reviewHotelName,
+        "reviewRegion": reviewRegion,
+        "reviewRate": reviewRate,
+        "reviewContent": reviewContent,
+        "reviewDate": reviewDate
+      })
+        .then(() => {
+          alert("수정이 완료되었습니다.");
+          location.href = "user_mypage.html";
+        })
+        .catch((error) => {
+          console.error("Error writing document: ", error);
+        });
+    }
+
+    $("#updateBtn").click(async function () {
+      // storage 파일 저장
+      let file = document.querySelector("#inputFile").files[0];
+
+      // 사진 파일이 변경되지 않은 경우 
+      if (file === undefined) {
+        get(reviewListRef).then((snapshot) => {
+          const object = snapshot.val();
+          updateReview(object.reviewImg);
+        }).catch((error) => {
+            console.error(error)
+        })
+        
+      } else {
+        let random = new Date().getTime();
+        let storageRef = sRef(storage, `reviewImage/${reviewId}/` + random);
+        const uploadTask = uploadBytesResumable(storageRef, file);
+
+          uploadTask.on(
+            "state_changed",
+            (snapshot) => {
+              console.log("Upload is");
+            },
+            (error) => {
+              // A full list of error codes is available at
+              // https://firebase.google.com/docs/storage/web/handle-errors
+              console.log("업로드 오류 발생");
+            },
+            () => {
+              // 업로드 성공 시 실행
+              getDownloadURL(uploadTask.snapshot.ref).then((url) => {
+                console.log("업로드된 경로", url);     
+                updateReview(url);
+              });
+            }
+          );
+      }
+      
+    });
+  </script>
+  <script>
+    function loadPrevFile(url) {
+        let container = document.getElementById('imageSec');
+    
+        let newImage = document.createElement("img"); //새 이미지 태그 생성
+
+        //이미지 source 가져오기
+        newImage.src = url;
+        newImage.style.width = "100%"; 
+        newImage.style.height = "100%";
+        newImage.style.objectFit = "cover"; // div에 넘치지 않고 들어가게
+
+        //이미지를 image-show div에 추가
+        container.appendChild(newImage);
+    }
+    function loadNewFile(input) {
+      let container = document.getElementById("imageSec");
+
+      // 기존 이미지를 모두 삭제
+      while (container.firstChild) {
+        container.removeChild(container.firstChild);
+      }
+
+      let file = input.files[0]; // 선택파일 가져오기
+      let newImage = document.createElement("img"); //새 이미지 태그 생성
+
+      //이미지 source 가져오기
+      newImage.src = URL.createObjectURL(file);
+      newImage.style.width = "100%";
+      newImage.style.height = "100%";
+      newImage.style.objectFit = "cover"; // div에 넘치지 않고 들어가게
+
+      //이미지를 image-show div에 추가
+      container.appendChild(newImage);
+    }
+  </script>
+</html>

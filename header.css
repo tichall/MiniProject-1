@@ -1,0 +1,49 @@
+.container-fluid {
+    margin: 0 50px 0 50px;
+}
+
+.form-control{
+    width: 400px;
+}
+
+#homepage {
+    font-family: "Bagel Fat One", system-ui;
+    /* font-weight: 400; */
+    font-style: bold;
+    color: #6A24FE;
+    font-size: 40px;
+}
+
+#homepage:hover {
+    color: #4714b6;
+}
+
+.search-filter, #search, #sign-in, #content, #my-page{
+    border-color: #6A24FE;
+    color: #6A24FE;
+}
+
+.search-filter:hover, #search:hover, #sign-in:hover, #content:hover, #my-page:hover {
+    box-shadow: 0px 0px 5px 0px gray;
+    background-color: white;
+}
+
+#search::placeholder {
+    color: #6A24FE; 
+}
+
+#sign-up {
+    background-color: #6A24FE;
+    color: white;
+}
+
+#sign-out {
+    background-color: #6A24FE;
+    color: white;
+}
+
+#sign-up:hover, #sign-out:hover {
+    box-shadow: 0px 0px 5px 0px gray;
+}
+
+
